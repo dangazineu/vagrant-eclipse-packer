@@ -1,0 +1,102 @@
+{
+    "variables": {
+        "atlas_username": "{{env `atlas_username`}}",
+        "atlas_box_name": "{{env `atlas_box_name`}}",
+		"atlas_box_version": "{{env `atlas_box_version`}}",
+		"vagrant_home": "{{env `vagrant_home`}}",
+		"original_user": "{{env `original_user`}}",
+		"original_box": "{{env `original_box`}}",
+		"original_version": "{{env `original_version`}}",
+
+		"jdk_file_name": "{{env `jdk_file_name`}}",
+		"maven_file_name": "{{env `maven_file_name`}}",
+		"gradle_file_name": "{{env `gradle_file_name`}}",
+		"eclipse_file_name": "{{env `eclipse_file_name`}}"
+    },
+    "provisioners": [
+		{
+		  "type": "shell",
+		  "inline": [ "mkdir /tmp/provisioning" ]
+		},
+		{
+		  "type": "file",
+		  "source": "provisioning/{{user `maven_file_name`}}",
+		  "destination": "/tmp/provisioning/{{user `maven_file_name`}}"
+		},
+		{
+		  "type": "file",
+		  "source": "provisioning/{{user `jdk_file_name`}}",
+		  "destination": "/tmp/provisioning/{{user `jdk_file_name`}}"
+		},
+		{
+		  "type": "file",
+		  "source": "provisioning/{{user `gradle_file_name`}}",
+		  "destination": "/tmp/provisioning/{{user `gradle_file_name`}}"
+		},
+		{
+		  "type": "file",
+		  "source": "provisioning/{{user `eclipse_file_name`}}",
+		  "destination": "/tmp/provisioning/{{user `eclipse_file_name`}}"
+		},		
+        {
+            "type": "shell",
+            "scripts": [
+				"scripts/install-maven.sh",
+				"scripts/install-jdk.sh",
+				"scripts/install-gradle.sh",
+				"scripts/install-eclipse.sh"
+            ],
+            "override": {
+                "virtualbox-ovf": {
+                    "execute_command": "echo 'vagrant'| {{ .Vars }} sudo -E -S sh '{{.Path}}'"
+                }
+            },
+			"environment_vars": [
+				"JDK_FILE_NAME={{user `jdk_file_name`}}",
+				"MAVEN_FILE_NAME={{user `maven_file_name`}}",
+				"GRADLE_FILE_NAME={{user `gradle_file_name`}}",
+				"ECLIPSE_FILE_NAME={{user `eclipse_file_name`}}"
+			]
+        }
+    ],
+    "builders": [
+        {
+            "type": "virtualbox-ovf",
+			"vm_name": "{{user `box_name`}}",
+			"source_path": "{{user `vagrant_home`}}/boxes/{{user `original_user`}}-VAGRANTSLASH-{{user `original_box`}}/{{user `original_version`}}/virtualbox/box.ovf",
+            "headless": true,
+            "ssh_username": "vagrant",
+            "ssh_password": "vagrant",
+            "virtualbox_version_file": ".vbox_version",
+			"shutdown_command": "echo 'packer' | sudo -S shutdown -P now",
+			"vboxmanage": [
+				["modifyvm", "{{.Name}}", "--memory", "8192"],
+				["modifyvm", "{{.Name}}", "--cpus", "2"],
+				["modifyvm", "{{.Name}}", "--vram", "128"],
+				["modifyvm", "{{.Name}}", "--accelerate2dvideo", "on"]
+			  ]
+        }
+    ],
+    "post-processors": [
+        [
+		{
+            "type": "vagrant",
+            "keep_input_artifact": true
+        },
+        {
+            "type": "atlas",
+            "only": ["virtualbox-ovf"],
+            "artifact": "{{user `atlas_username`}}/{{user `atlas_box_name`}}",
+            "artifact_type": "vagrant.box",
+            "metadata": {
+                "provider": "virtualbox",
+                "version": "{{user `atlas_box_version`}}",
+				"description": "Unity desktop with Java, Maven, Gradle and Eclipse Java EE Mars. Built from {{user `original_user`}}/{{user `original_box`}} v{{user `original_version`}}"
+            }
+        }
+		]
+    ],
+    "push": {
+      "name": "{{user `atlas_username`}}/{{user `atlas_box_name`}}"
+    }	
+}
