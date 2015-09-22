@@ -6,7 +6,6 @@ echo "installing maven from /tmp/provisioning/$ECLIPSE_FILE_NAME"
 ECLIPSE_BASE_PATH=/usr/local
 ECLIPSE_HOME=$ECLIPSE_BASE_PATH/eclipse
 
-#this is very hardcoded
 tar -xzf /tmp/provisioning/$ECLIPSE_FILE_NAME -C $ECLIPSE_BASE_PATH
 
 cat <<EOF > /etc/profile.d/eclipse-env.sh
@@ -17,7 +16,7 @@ EOF
 
 chmod 755 /etc/profile.d/eclipse-env.sh
 
-
+#creates an icon entry to add in the sidebar favorites
 cat <<EOF > /usr/share/applications/eclipse.desktop
 [Desktop Entry]
 Type=Application
@@ -36,9 +35,10 @@ chmod 755 /usr/share/applications/eclipse.desktop
 ln -s /usr/lib/java $ECLIPSE_HOME/jre
 
 #CDT includes some useful tools, like org.eclipse.cdt.managedbuilder.core.headlessbuild 
-#FIXME while the other installs in this build use tarballs provided externally, this still step requires internet connection
+#FIXME while the other installs in this build use tarballs provided externally, this step still requires internet connection
 $ECLIPSE_HOME/eclipse -application org.eclipse.equinox.p2.director -repository http://download.eclipse.org/tools/cdt/releases/8.7/ -installIU org.eclipse.cdt.feature.group
 
+#setup the sidebar favorites in unity
 #if you want to add other apps to favorites, just replace contents of this file
 cat <<EOF > /usr/bin/gsettings-set-favorites
 gsettings set com.canonical.Unity.Launcher favorites "['application://eclipse.desktop', 'application://debian-xterm.desktop', 'application://nautilus.desktop']"
