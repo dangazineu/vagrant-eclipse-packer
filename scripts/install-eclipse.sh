@@ -45,7 +45,7 @@ gsettings set com.canonical.Unity.Launcher favorites "['application://eclipse.de
 EOF
 chmod 755 /usr/bin/gsettings-set-favorites
 
-#sets favorites
+#this ensures the launcher configurer will be automatically executed every time we start Unity
 cat <<EOF > /etc/xdg/autostart/launcher-configurer.desktop
 [Desktop Entry]
 Type=Application
